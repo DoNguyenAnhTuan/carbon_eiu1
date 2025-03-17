@@ -51,19 +51,9 @@ const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => 
       </CardHeader>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 p-0 bg-transparent">
-          <TabsTrigger 
-            value="cost" 
-            className={`bg-white text-gray-700 border-b-2 ${activeTab === 'cost' ? 'border-indigo-600 font-medium' : 'border-gray-200'} rounded-none px-5 py-3`}
-          >
-            Cost
-          </TabsTrigger>
-          <TabsTrigger 
-            value="consumption" 
-            className={`bg-white text-gray-700 border-b-2 ${activeTab === 'consumption' ? 'border-indigo-600 font-medium' : 'border-gray-200'} rounded-none px-5 py-3`}
-          >
-            Consumption
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="cost">Cost</TabsTrigger>
+          <TabsTrigger value="consumption">Consumption</TabsTrigger>
         </TabsList>
         
         <TabsContent value="cost" className="p-6 space-y-6">
