@@ -15,6 +15,15 @@ interface MeterUsageStats {
   benefits: number;
 }
 
+interface HourlyConsumptionData {
+  id: number;
+  siteId: number;
+  date: string;
+  hour: number;
+  electricityConsumption: number;
+  gasConsumption: number;
+}
+
 interface HourlyUsageData {
   hour: string;
   usage: number;
@@ -27,27 +36,12 @@ const Meters = () => {
 
   // Fetch hourly usage data
   const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
-    queryKey: ["/api/energy/consumption", siteFilter === "ALL SITES" ? null : siteFilter],
-    // Transform the data to match hourly format
+    queryKey: ["/api/consumption/hourly", siteFilter === "ALL SITES" ? null : siteFilter, date?.toISOString().split('T')[0]],
     select: (data) => {
-      // Create 24 hour data points with sample values
-      return Array.from({ length: 24 }, (_, i) => {
-        const hour = i.toString().padStart(2, "0") + ":00";
-        // Generate a curve that peaks during work hours
-        let usage = 0;
-        if (i >= 3 && i < 6) {
-          usage = Math.floor(Math.random() * 200) + 50; // Early morning: low usage
-        } else if (i >= 6 && i < 9) {
-          usage = Math.floor(Math.random() * 300) + 200; // Morning: medium usage
-        } else if (i >= 9 && i < 18) {
-          usage = Math.floor(Math.random() * 200) + 400; // Work hours: high usage
-        } else if (i >= 18 && i < 21) {
-          usage = Math.floor(Math.random() * 300) + 200; // Evening: medium usage
-        } else {
-          usage = Math.floor(Math.random() * 100) + 50; // Night: low usage
-        }
-        return { hour, usage };
-      });
+      return data.map(item => ({
+        hour: item.hour.toString().padStart(2, "0") + ":00",
+        usage: item.electricityConsumption
+      }));
     }
   });
 
@@ -212,9 +206,12 @@ const Meters = () => {
                   dataKey="hour" 
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => {
-                    // Only show some hours to avoid cluttering
+                    // Format to match the reference image - show hours in 3-hour intervals
                     const hour = parseInt(value.split(':')[0]);
-                    return hour % 3 === 0 ? value : '';
+                    if (hour % 3 === 0) {
+                      return `${hour}:00`;
+                    }
+                    return '';
                   }}
                 />
                 <YAxis 
