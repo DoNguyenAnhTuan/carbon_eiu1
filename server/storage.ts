@@ -3,7 +3,8 @@ import {
   sites, Site, InsertSite,
   energyConsumption, EnergyConsumption, InsertEnergyConsumption,
   assets, Asset, InsertAsset,
-  monthlyConsumption, MonthlyConsumption, InsertMonthlyConsumption
+  monthlyConsumption, MonthlyConsumption, InsertMonthlyConsumption,
+  hourlyConsumption, HourlyConsumption, InsertHourlyConsumption
 } from "@shared/schema";
 
 export interface IStorage {
@@ -38,6 +39,10 @@ export interface IStorage {
   // Monthly consumption for charts
   getMonthlyConsumption(year: number): Promise<MonthlyConsumption[]>;
   createMonthlyConsumption(data: InsertMonthlyConsumption): Promise<MonthlyConsumption>;
+  
+  // Hourly consumption for meters page
+  getHourlyConsumption(siteId: number | null, date: Date): Promise<HourlyConsumption[]>;
+  createHourlyConsumption(data: InsertHourlyConsumption): Promise<HourlyConsumption>;
 }
 
 export class MemStorage implements IStorage {
@@ -46,11 +51,13 @@ export class MemStorage implements IStorage {
   private energyConsumptionData: Map<number, EnergyConsumption>;
   private assetsData: Map<number, Asset>;
   private monthlyConsumptionData: Map<number, MonthlyConsumption>;
+  private hourlyConsumptionData: Map<number, HourlyConsumption>;
   private currentUserId: number;
   private currentSiteId: number;
   private currentEnergyConsumptionId: number;
   private currentAssetId: number;
   private currentMonthlyConsumptionId: number;
+  private currentHourlyConsumptionId: number;
 
   constructor() {
     this.users = new Map();
@@ -58,11 +65,13 @@ export class MemStorage implements IStorage {
     this.energyConsumptionData = new Map();
     this.assetsData = new Map();
     this.monthlyConsumptionData = new Map();
+    this.hourlyConsumptionData = new Map();
     this.currentUserId = 1;
     this.currentSiteId = 1;
     this.currentEnergyConsumptionId = 1;
     this.currentAssetId = 1;
     this.currentMonthlyConsumptionId = 1;
+    this.currentHourlyConsumptionId = 1;
 
     // Initialize with sample data
     this.initializeData();
@@ -174,6 +183,26 @@ export class MemStorage implements IStorage {
     this.monthlyConsumptionData.set(id, consumption);
     return consumption;
   }
+  
+  // Hourly consumption for meters page
+  async getHourlyConsumption(siteId: number | null, date: Date): Promise<HourlyConsumption[]> {
+    return Array.from(this.hourlyConsumptionData.values())
+      .filter(data => {
+        const dataDate = new Date(data.date);
+        return (siteId === null || data.siteId === siteId) &&
+          dataDate.getFullYear() === date.getFullYear() &&
+          dataDate.getMonth() === date.getMonth() &&
+          dataDate.getDate() === date.getDate();
+      })
+      .sort((a, b) => a.hour - b.hour);
+  }
+
+  async createHourlyConsumption(data: InsertHourlyConsumption): Promise<HourlyConsumption> {
+    const id = this.currentHourlyConsumptionId++;
+    const consumption: HourlyConsumption = { ...data, id };
+    this.hourlyConsumptionData.set(id, consumption);
+    return consumption;
+  }
 
   // Initialize with sample data
   private initializeData() {
@@ -246,6 +275,27 @@ export class MemStorage implements IStorage {
     });
     
     this.currentMonthlyConsumptionId = months.length + 1;
+    
+    // Create hourly consumption data for the meters page
+    const today = new Date();
+    const hourlyElectricityData = [
+      20, 15, 10, 15, 20, 40, 80, 150, 250, 350, 400, 450,
+      500, 520, 480, 450, 400, 350, 300, 250, 200, 150, 100, 50
+    ];
+    
+    hourlyElectricityData.forEach((consumption, hour) => {
+      const hourlyData: HourlyConsumption = {
+        id: hour + 1,
+        siteId: 0, // All sites
+        date: today,
+        hour,
+        electricityConsumption: consumption,
+        gasConsumption: 0
+      };
+      this.hourlyConsumptionData.set(hour + 1, hourlyData);
+    });
+    
+    this.currentHourlyConsumptionId = hourlyElectricityData.length + 1;
   }
 }
 

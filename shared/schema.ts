@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -110,10 +110,10 @@ export type InsertMonthlyConsumption = z.infer<typeof insertMonthlyConsumptionSc
 export const hourlyConsumption = pgTable("hourly_consumption", {
   id: serial("id").primaryKey(),
   siteId: integer("site_id").references(() => sites.id).notNull(),
-  date: date("date").notNull(),
+  date: timestamp("date").notNull(),
   hour: integer("hour").notNull(),
-  electricityConsumption: numeric("electricity_consumption").notNull(),
-  gasConsumption: numeric("gas_consumption").notNull()
+  electricityConsumption: numeric("electricity_consumption", { precision: 10, scale: 2 }).notNull(),
+  gasConsumption: numeric("gas_consumption", { precision: 10, scale: 2 }).notNull()
 });
 
 export const insertHourlyConsumptionSchema = createInsertSchema(hourlyConsumption).pick({
