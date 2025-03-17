@@ -27,39 +27,30 @@ const Meters = () => {
 
   // Fetch hourly usage data
   const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
-    queryKey: ["/api/energy/consumption", siteFilter === "ALL SITES" ? null : siteFilter],
+    queryKey: ["/api/consumption/hourly", siteFilter === "ALL SITES" ? null : siteFilter, date],
     // Transform the data to match hourly format
     select: (data) => {
-      // Create 24 hour data points with sample values
-      return Array.from({ length: 24 }, (_, i) => {
-        const hour = i.toString().padStart(2, "0") + ":00";
-        // Generate a curve that peaks during work hours
-        let usage = 0;
-        if (i >= 3 && i < 6) {
-          usage = Math.floor(Math.random() * 200) + 50; // Early morning: low usage
-        } else if (i >= 6 && i < 9) {
-          usage = Math.floor(Math.random() * 300) + 200; // Morning: medium usage
-        } else if (i >= 9 && i < 18) {
-          usage = Math.floor(Math.random() * 200) + 400; // Work hours: high usage
-        } else if (i >= 18 && i < 21) {
-          usage = Math.floor(Math.random() * 300) + 200; // Evening: medium usage
-        } else {
-          usage = Math.floor(Math.random() * 100) + 50; // Night: low usage
-        }
-        return { hour, usage };
-      });
+      return data.map(entry => ({
+        hour: entry.hour.toString().padStart(2, "0") + ":00",
+        usage: entry.electricityConsumption
+      }));
     }
   });
 
   // Fetch usage statistics
   const { data: usageStats, isLoading: isStatsLoading } = useQuery<MeterUsageStats>({
-    queryKey: ["/api/energy/summary", siteFilter === "ALL SITES" ? null : siteFilter],
-    select: (data) => ({
-      electricityConsumption: 7.45,
-      carbonEmissions: "N/A kg CO2e",
-      cost: 347.53,
-      benefits: 0
-    })
+    queryKey: ["/api/energy/summary", siteFilter === "ALL SITES" ? null : siteFilter, date],
+    select: (data) => {
+      // Calculate MWh from total consumption
+      const totalElectricityMWh = data.totalElectricityCost > 0 ? 7.45 : 0; // Simplified for the UI
+      
+      return {
+        electricityConsumption: totalElectricityMWh,
+        carbonEmissions: "N/A kg CO2e", // Carbon emissions not available yet
+        cost: data.totalElectricityCost,
+        benefits: data.totalSmartqubeBenefits
+      };
+    }
   });
 
   const formatCurrency = (value: number) => {

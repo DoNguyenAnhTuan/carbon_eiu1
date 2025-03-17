@@ -95,6 +95,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch monthly consumption data" });
     }
   });
+  
+  // Hourly consumption data for meters page
+  app.get("/api/consumption/hourly", async (req: Request, res: Response) => {
+    try {
+      const siteId = req.query.siteId ? parseInt(req.query.siteId as string) : null;
+      const dateParam = req.query.date as string || new Date().toISOString().split('T')[0];
+      const date = new Date(dateParam);
+      
+      const hourlyData = await storage.getHourlyConsumption(siteId, date);
+      res.json(hourlyData);
+    } catch (error) {
+      console.error("Error fetching hourly consumption data:", error);
+      res.status(500).json({ error: "Failed to fetch hourly consumption data" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
