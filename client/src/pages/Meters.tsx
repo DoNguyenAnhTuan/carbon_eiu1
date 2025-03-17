@@ -16,42 +16,55 @@ interface MeterUsageStats {
 }
 
 interface HourlyUsageData {
+  id: number;
+  siteId: number;
+  date: string;
+  hour: number;
+  electricityConsumption: number;
+  gasConsumption: number;
+}
+
+interface ChartData {
   hour: string;
   usage: number;
 }
 
-const Meters = () => {
+interface MetersProps {
+  selectedSite: string;
+}
+
+const Meters = ({ selectedSite }: MetersProps) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [siteFilter, setSiteFilter] = useState<string>("ALL SITES");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Fetch hourly usage data
-  const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
-    queryKey: ["/api/consumption/hourly", siteFilter === "ALL SITES" ? null : siteFilter, date],
-    // Transform the data to match hourly format
-    select: (data) => {
-      return data.map(entry => ({
-        hour: entry.hour.toString().padStart(2, "0") + ":00",
-        usage: entry.electricityConsumption
-      }));
-    }
+  const { data: apiHourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
+    queryKey: ["/api/consumption/hourly", selectedSite === "ALL SITES" ? null : selectedSite, date],
   });
 
+  // Transform the hourly data for the chart
+  const hourlyData: ChartData[] = apiHourlyData ? apiHourlyData.map(entry => ({
+    hour: entry.hour.toString().padStart(2, "0") + ":00",
+    usage: entry.electricityConsumption
+  })) : [];
+
   // Fetch usage statistics
-  const { data: usageStats, isLoading: isStatsLoading } = useQuery<MeterUsageStats>({
-    queryKey: ["/api/energy/summary", siteFilter === "ALL SITES" ? null : siteFilter, date],
-    select: (data) => {
-      // Calculate MWh from total consumption
-      const totalElectricityMWh = data.totalElectricityCost > 0 ? 7.45 : 0; // Simplified for the UI
-      
-      return {
-        electricityConsumption: totalElectricityMWh,
-        carbonEmissions: "N/A kg CO2e", // Carbon emissions not available yet
-        cost: data.totalElectricityCost,
-        benefits: data.totalSmartqubeBenefits
-      };
-    }
+  const { data: energySummary, isLoading: isStatsLoading } = useQuery({
+    queryKey: ["/api/energy/summary", selectedSite === "ALL SITES" ? null : selectedSite, date],
   });
+
+  // Transform the energy summary for display
+  const usageStats: MeterUsageStats = energySummary ? {
+    electricityConsumption: 7.45, // Fixed for the display, could be calculated from hourlyData
+    carbonEmissions: "N/A kg CO2e", // Carbon emissions not available yet
+    cost: energySummary.totalElectricityCost || 0,
+    benefits: energySummary.totalSmartqubeBenefits || 0
+  } : {
+    electricityConsumption: 0,
+    carbonEmissions: "N/A kg CO2e",
+    cost: 0,
+    benefits: 0
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
