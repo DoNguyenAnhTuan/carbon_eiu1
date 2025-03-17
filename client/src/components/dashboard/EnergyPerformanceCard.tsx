@@ -45,7 +45,7 @@ const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => 
             </p>
           )}
         </div>
-        <a href="#" className="px-3 py-1 bg-secondary text-white text-sm rounded hover:bg-teal-700 transition-colors">
+        <a href="#" className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors shadow-sm">
           View More
         </a>
       </CardHeader>

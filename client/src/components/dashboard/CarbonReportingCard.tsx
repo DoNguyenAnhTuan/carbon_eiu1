@@ -39,7 +39,7 @@ const CarbonReportingCard = () => {
         <p className="text-sm text-gray-500 max-w-md mb-6">
           You do not have access to this feature. Please contact us for consultation regarding your carbon emissions reduction and reporting.
         </p>
-        <Button className="bg-primary hover:bg-primary/90 text-white rounded-full">
+        <Button className="bg-green-600 hover:bg-green-700 text-white rounded-full border-0 shadow-sm">
           CONTACT US
         </Button>
       </CardContent>

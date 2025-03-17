@@ -38,7 +38,7 @@ const Header = ({ toggleSidebar, selectedSite, setSelectedSite }: HeaderProps) =
         <div className="relative mx-auto md:mx-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center justify-between w-48 md:w-64 px-4 py-2 bg-secondary text-white rounded shadow-sm hover:bg-teal-700 focus:outline-none">
+              <button className="flex items-center justify-between w-48 md:w-64 px-4 py-2 bg-green-600 text-white rounded shadow-sm hover:bg-green-700 focus:outline-none">
                 <span>{selectedSite}</span>
                 <FaChevronDown className="ml-2 h-4 w-4" />
               </button>
