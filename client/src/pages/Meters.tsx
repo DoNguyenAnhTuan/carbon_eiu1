@@ -75,7 +75,10 @@ const Meters = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
-            <Button variant="outline" className="bg-teal-600 text-white font-medium py-2 px-4 rounded-md">
+            <Button 
+              variant="outline" 
+              className="bg-green-600 text-white font-medium py-2 px-4 rounded-md hover:bg-green-700 border-0 shadow-sm"
+            >
               {siteFilter}
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
