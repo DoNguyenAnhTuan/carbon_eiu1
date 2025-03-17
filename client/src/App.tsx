@@ -1,5 +1,6 @@
 import { Route, Switch } from "wouter";
 import Dashboard from "@/pages/Dashboard";
+import Meters from "@/pages/Meters";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -26,6 +27,7 @@ function App() {
         
         <Switch>
           <Route path="/" component={() => <Dashboard selectedSite={selectedSite} />} />
+          <Route path="/meters" component={() => <Meters />} />
           <Route component={NotFound} />
         </Switch>
       </div>

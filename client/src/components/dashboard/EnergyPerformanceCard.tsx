@@ -97,7 +97,7 @@ const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => 
                   <h3 className="text-2xl font-bold text-primary">
                     {formatCurrency(data?.totalSmartqubeBenefits || 0)}
                   </h3>
-                  <p className="text-sm text-gray-500">Benefits Gained from Smartqube Control</p>
+                  <p className="text-sm text-gray-500">Benefits Gained from Smart Energy Management</p>
                 </div>
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                   <FaHandHoldingUsd className="text-green-500 text-2xl" />
@@ -108,9 +108,54 @@ const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => 
         </TabsContent>
         
         <TabsContent value="consumption" className="p-6 space-y-6">
-          <div className="text-center py-8">
-            <p className="text-gray-500">Consumption data will be displayed here.</p>
-          </div>
+          {isLoading ? (
+            <div className="space-y-6">
+              <div className="h-16 bg-gray-100 animate-pulse rounded"></div>
+              <div className="h-16 bg-gray-100 animate-pulse rounded"></div>
+              <div className="h-16 bg-gray-100 animate-pulse rounded"></div>
+            </div>
+          ) : (
+            <>
+              {/* Electricity Consumption */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold text-primary">
+                    163.79 MWh
+                  </h3>
+                  <p className="text-sm text-gray-500">Electricity Consumption</p>
+                </div>
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <FaBolt className="text-yellow-500 text-2xl" />
+                </div>
+              </div>
+              
+              {/* Gas Consumption */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold text-primary">
+                    0 kWh
+                  </h3>
+                  <p className="text-sm text-gray-500">Gas Consumption</p>
+                </div>
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <FaFire className="text-orange-500 text-2xl" />
+                </div>
+              </div>
+              
+              {/* Flex amount */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold text-primary">
+                    0 kWh
+                  </h3>
+                  <p className="text-sm text-gray-500">Flex amount</p>
+                </div>
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <FaHandHoldingUsd className="text-green-500 text-2xl" />
+                </div>
+              </div>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </Card>

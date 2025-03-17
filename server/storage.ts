@@ -206,7 +206,7 @@ export class MemStorage implements IStorage {
       date: new Date("2023-03-17"),
       electricityCost: 9119.95,
       gasCost: 0,
-      smartqubeBenefits: 0,
+      smartqubeBenefits: 1275.50,
       electricityConsumption: 7500,
       gasConsumption: 0
     };

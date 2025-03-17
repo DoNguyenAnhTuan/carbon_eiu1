@@ -105,3 +105,24 @@ export type InsertAsset = z.infer<typeof insertAssetSchema>;
 
 export type MonthlyConsumption = typeof monthlyConsumption.$inferSelect;
 export type InsertMonthlyConsumption = z.infer<typeof insertMonthlyConsumptionSchema>;
+
+// Define the hourly consumption schema
+export const hourlyConsumption = pgTable("hourly_consumption", {
+  id: serial("id").primaryKey(),
+  siteId: integer("site_id").references(() => sites.id).notNull(),
+  date: date("date").notNull(),
+  hour: integer("hour").notNull(),
+  electricityConsumption: numeric("electricity_consumption").notNull(),
+  gasConsumption: numeric("gas_consumption").notNull()
+});
+
+export const insertHourlyConsumptionSchema = createInsertSchema(hourlyConsumption).pick({
+  siteId: true,
+  date: true,
+  hour: true,
+  electricityConsumption: true,
+  gasConsumption: true
+});
+
+export type HourlyConsumption = typeof hourlyConsumption.$inferSelect;
+export type InsertHourlyConsumption = z.infer<typeof insertHourlyConsumptionSchema>;
