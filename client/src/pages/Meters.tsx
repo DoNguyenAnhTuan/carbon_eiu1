@@ -37,8 +37,12 @@ const Meters = () => {
   // Fetch hourly usage data
   const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
     queryKey: ["/api/consumption/hourly", siteFilter === "ALL SITES" ? null : siteFilter, date?.toISOString().split('T')[0]],
-    select: (data) => {
-      return data.map(item => ({
+    queryFn: async () => {
+      const response = await fetch(`/api/consumption/hourly?siteId=${siteFilter === "ALL SITES" ? "" : siteFilter}&date=${date?.toISOString().split('T')[0] || ""}`);
+      const data = await response.json();
+      
+      // Transform the data to match our expected format
+      return data.map((item: any) => ({
         hour: item.hour.toString().padStart(2, "0") + ":00",
         usage: item.electricityConsumption
       }));
@@ -200,11 +204,14 @@ const Meters = () => {
                   left: 20,
                   bottom: 30,
                 }}
+                barSize={15}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.3} />
                 <XAxis 
                   dataKey="hour" 
                   tick={{ fontSize: 12 }}
+                  axisLine={{ stroke: '#E0E0E0' }}
+                  tickLine={false}
                   tickFormatter={(value) => {
                     // Format to match the reference image - show hours in 3-hour intervals
                     const hour = parseInt(value.split(':')[0]);
@@ -216,19 +223,23 @@ const Meters = () => {
                 />
                 <YAxis 
                   tick={{ fontSize: 12 }}
-                  domain={[0, 1000]}
+                  domain={[0, 'dataMax + 100']}
+                  tickCount={5}
+                  axisLine={{ stroke: '#E0E0E0' }}
+                  tickLine={false}
                   label={{ 
                     value: 'kWh', 
                     angle: -90, 
                     position: 'insideLeft',
-                    style: { textAnchor: 'middle' } 
+                    style: { textAnchor: 'middle', fontSize: 12 } 
                   }}
                 />
                 <Tooltip 
                   formatter={(value) => [`${value} kWh`, 'Usage']}
                   labelFormatter={(label) => `Time: ${label}`}
+                  cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                 />
-                <Bar dataKey="usage" fill="#4F46E5" />
+                <Bar dataKey="usage" fill="#4F46E5" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
