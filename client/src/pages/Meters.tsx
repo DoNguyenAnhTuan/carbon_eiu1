@@ -16,55 +16,51 @@ interface MeterUsageStats {
 }
 
 interface HourlyUsageData {
-  id: number;
-  siteId: number;
-  date: string;
-  hour: number;
-  electricityConsumption: number;
-  gasConsumption: number;
-}
-
-interface ChartData {
   hour: string;
   usage: number;
 }
 
-interface MetersProps {
-  selectedSite: string;
-}
-
-const Meters = ({ selectedSite }: MetersProps) => {
+const Meters = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [siteFilter, setSiteFilter] = useState<string>("ALL SITES");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Fetch hourly usage data
-  const { data: apiHourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
-    queryKey: ["/api/consumption/hourly", selectedSite === "ALL SITES" ? null : selectedSite, date],
+  const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
+    queryKey: ["/api/energy/consumption", siteFilter === "ALL SITES" ? null : siteFilter],
+    // Transform the data to match hourly format
+    select: (data) => {
+      // Create 24 hour data points with sample values
+      return Array.from({ length: 24 }, (_, i) => {
+        const hour = i.toString().padStart(2, "0") + ":00";
+        // Generate a curve that peaks during work hours
+        let usage = 0;
+        if (i >= 3 && i < 6) {
+          usage = Math.floor(Math.random() * 200) + 50; // Early morning: low usage
+        } else if (i >= 6 && i < 9) {
+          usage = Math.floor(Math.random() * 300) + 200; // Morning: medium usage
+        } else if (i >= 9 && i < 18) {
+          usage = Math.floor(Math.random() * 200) + 400; // Work hours: high usage
+        } else if (i >= 18 && i < 21) {
+          usage = Math.floor(Math.random() * 300) + 200; // Evening: medium usage
+        } else {
+          usage = Math.floor(Math.random() * 100) + 50; // Night: low usage
+        }
+        return { hour, usage };
+      });
+    }
   });
-
-  // Transform the hourly data for the chart
-  const hourlyData: ChartData[] = apiHourlyData ? apiHourlyData.map(entry => ({
-    hour: entry.hour.toString().padStart(2, "0") + ":00",
-    usage: entry.electricityConsumption
-  })) : [];
 
   // Fetch usage statistics
-  const { data: energySummary, isLoading: isStatsLoading } = useQuery({
-    queryKey: ["/api/energy/summary", selectedSite === "ALL SITES" ? null : selectedSite, date],
+  const { data: usageStats, isLoading: isStatsLoading } = useQuery<MeterUsageStats>({
+    queryKey: ["/api/energy/summary", siteFilter === "ALL SITES" ? null : siteFilter],
+    select: (data) => ({
+      electricityConsumption: 7.45,
+      carbonEmissions: "N/A kg CO2e",
+      cost: 347.53,
+      benefits: 0
+    })
   });
-
-  // Transform the energy summary for display
-  const usageStats: MeterUsageStats = energySummary ? {
-    electricityConsumption: 7.45, // Fixed for the display, could be calculated from hourlyData
-    carbonEmissions: "N/A kg CO2e", // Carbon emissions not available yet
-    cost: energySummary.totalElectricityCost || 0,
-    benefits: energySummary.totalSmartqubeBenefits || 0
-  } : {
-    electricityConsumption: 0,
-    carbonEmissions: "N/A kg CO2e",
-    cost: 0,
-    benefits: 0
-  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -82,7 +78,7 @@ const Meters = ({ selectedSite }: MetersProps) => {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
             <Button variant="outline" className="bg-teal-600 text-white font-medium py-2 px-4 rounded-md">
-              {selectedSite}
+              {siteFilter}
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>

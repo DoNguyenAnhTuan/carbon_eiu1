@@ -27,7 +27,7 @@ function App() {
         
         <Switch>
           <Route path="/" component={() => <Dashboard selectedSite={selectedSite} />} />
-          <Route path="/meters" component={() => <Meters selectedSite={selectedSite} />} />
+          <Route path="/meters" component={() => <Meters />} />
           <Route component={NotFound} />
         </Switch>
       </div>

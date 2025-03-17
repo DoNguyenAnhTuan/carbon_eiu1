@@ -112,8 +112,8 @@ export const hourlyConsumption = pgTable("hourly_consumption", {
   siteId: integer("site_id").references(() => sites.id).notNull(),
   date: timestamp("date").notNull(),
   hour: integer("hour").notNull(),
-  electricityConsumption: doublePrecision("electricity_consumption").notNull(),
-  gasConsumption: doublePrecision("gas_consumption").notNull()
+  electricityConsumption: numeric("electricity_consumption", { precision: 10, scale: 2 }).notNull(),
+  gasConsumption: numeric("gas_consumption", { precision: 10, scale: 2 }).notNull()
 });
 
 export const insertHourlyConsumptionSchema = createInsertSchema(hourlyConsumption).pick({
