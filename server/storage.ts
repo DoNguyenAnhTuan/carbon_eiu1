@@ -217,9 +217,15 @@ export class MemStorage implements IStorage {
 
     // Create sample sites
     const sites: Site[] = [
-      { id: 1, name: "Headquarters", latitude: 21.0388, longitude: 105.8505, meterCount: 4 },
-      { id: 2, name: "Manufacturing Plant", latitude: 21.0358, longitude: 105.8545, meterCount: 3 },
-      { id: 3, name: "Distribution Center", latitude: 21.0328, longitude: 105.8485, meterCount: 2 }
+      { id: 1, name: "Block 5", latitude: 11.0540552, longitude: 106.6663097, meterCount: 0 },
+      { id: 2, name: "Block 4", latitude: 11.0535552, longitude: 106.6679097, meterCount: 1 },
+      { id: 3, name: "Block 8", latitude: 11.0536552, longitude: 106.6672097, meterCount: 1 },
+      { id: 4, name: "Block 10", latitude: 11.0537552, longitude: 106.6655097, meterCount: 1 },
+      { id: 5, name: "Block 11A", latitude: 11.0540552, longitude: 106.6663097, meterCount: 1 },
+      { id: 6, name: "Block 11B", latitude: 11.0541552, longitude: 106.6664097, meterCount: 1 },
+      { id: 7, name: "Block 3", latitude: 11.0523552, longitude: 106.6680097, meterCount: 1 },
+      { id: 8, name: "Block 6", latitude: 11.0519552, longitude: 106.6680097, meterCount: 1 },
+      { id: 9, name: "Garage", latitude: 11.0518552, longitude: 106.6681097, meterCount: 1 }
     ];
     
     sites.forEach(site => this.sites.set(site.id, site));

@@ -45,7 +45,7 @@ const ConsumptionTrendsCard = () => {
                 <Line 
                   type="monotone" 
                   dataKey="electricity" 
-                  name="Electricity (kWh)" 
+                  name="Electricity (kW)" 
                   stroke="hsl(var(--primary))" 
                   activeDot={{ r: 8 }} 
                   strokeWidth={2}

@@ -1,37 +1,32 @@
-import { Route, Switch } from "wouter";
-import Dashboard from "@/pages/Dashboard";
-import Meters from "@/pages/Meters";
-import NotFound from "@/pages/not-found";
-import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import Home from './pages/Home';
+import Meters from './pages/Meters';
+import CarbonJourney from './pages/CarbonJourney';
+import BillingReport from './pages/BillingReport';
+import Login from './pages/Login';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import ProfilePage from "@/pages/ProfilePage";
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedSite, setSelectedSite] = useState("ALL SITES");
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          toggleSidebar={toggleSidebar} 
-          selectedSite={selectedSite}
-          setSelectedSite={setSelectedSite}
-        />
-        
-        <Switch>
-          <Route path="/" component={() => <Dashboard selectedSite={selectedSite} />} />
-          <Route path="/meters" component={() => <Meters />} />
-          <Route component={NotFound} />
-        </Switch>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Home />} />
+          <Route path="meters" element={<Meters />} />
+          <Route path="carbon-journey" element={<CarbonJourney />} />
+          <Route path="billing-report" element={<BillingReport />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

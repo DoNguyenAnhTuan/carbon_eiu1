@@ -21,8 +21,19 @@ interface EnergySummary {
 const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => {
   const [activeTab, setActiveTab] = useState("cost");
   
+  // Use the provided host URL
+  const apiHost = "https://dashboard.qenergy.ai";
+  const apiUrl = `${apiHost}/api/energy_supply_contract/energy_bills/202/2022/05/`;
+
   const { data, isLoading } = useQuery<EnergySummary>({
-    queryKey: ["/api/energy/summary", selectedSite === "ALL SITES" ? null : selectedSite],
+    queryKey: [apiUrl],
+    queryFn: async () => {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    },
   });
 
   const formatCurrency = (value: number) => {
@@ -45,7 +56,7 @@ const EnergyPerformanceCard = ({ selectedSite }: EnergyPerformanceCardProps) => 
             </p>
           )}
         </div>
-        <a href="#" className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors shadow-sm">
+        <a href="#" className="px-3 py-1" style={{ backgroundColor: '#B38E5D', color: 'white', borderRadius: '0.375rem', transition: 'background-color 0.2s' }}>
           View More
         </a>
       </CardHeader>

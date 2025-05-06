@@ -17,7 +17,7 @@ const PortfolioCard = () => {
     <Card className="overflow-hidden">
       <CardHeader className="p-4 border-b border-gray-200 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold text-gray-800">YOUR PORTFOLIO</CardTitle>
-        <a href="#" className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors shadow-sm">
+        <a href="#" className="px-3 py-1" style={{ backgroundColor: '#B38E5D', color: 'white', borderRadius: '0.375rem', transition: 'background-color 0.2s' }}>
           View More
         </a>
       </CardHeader>

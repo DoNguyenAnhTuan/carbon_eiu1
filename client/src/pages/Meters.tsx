@@ -3,25 +3,25 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FaQuestionCircle, FaDownload, FaCalendarAlt } from "react-icons/fa";
+import { FaQuestionCircle, FaDownload } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAccessToken, fetchSiteData, fetchSiteData_ConsumptionSummary } from "@/utils/API";
+import { useOutletContext } from "react-router-dom";
 
 interface MeterUsageStats {
-  electricityConsumption: number;
+  electricityConsumption: string;
   carbonEmissions: string;
   cost: number;
   benefits: number;
+  livepowwer: string;
 }
 
-interface HourlyConsumptionData {
-  id: number;
-  siteId: number;
-  date: string;
-  hour: number;
-  electricityConsumption: number;
-  gasConsumption: number;
+interface OutletContext {
+  selectedSiteId: string;
+  monthYear: Date | null;
 }
 
 interface HourlyUsageData {
@@ -30,15 +30,15 @@ interface HourlyUsageData {
 }
 
 const Meters = () => {
+  const { selectedSiteId, monthYear } = useOutletContext<OutletContext>();
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [siteFilter, setSiteFilter] = useState<string>("ALL SITES");
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [siteFilter, setSiteFilter] = useState<string>("EIU Block 6");
 
   // Fetch hourly usage data
-  const { data: hourlyData, isLoading: isHourlyDataLoading } = useQuery<HourlyUsageData[]>({
-    queryKey: ["/api/consumption/hourly", siteFilter === "ALL SITES" ? null : siteFilter, date?.toISOString().split('T')[0]],
+  const { data: hourlyData, isLoading: isHourlyDataLoading, refetch: refetchHourlyData } = useQuery<HourlyUsageData[]>({
+    queryKey: ["/api/consumption/hourly", siteFilter === "EIU Block 6" ? null : siteFilter, date?.toISOString().split('T')[0]],
     queryFn: async () => {
-      const response = await fetch(`/api/consumption/hourly?siteId=${siteFilter === "ALL SITES" ? "" : siteFilter}&date=${date?.toISOString().split('T')[0] || ""}`);
+      const response = await fetch(`/api/consumption/hourly?siteId=${siteFilter === "EIU Block 6" ? "" : siteFilter}&date=${date?.toISOString().split('T')[0] || ""}`);
       const data = await response.json();
       
       // Transform the data to match our expected format
@@ -49,15 +49,98 @@ const Meters = () => {
     }
   });
 
+  // Fetch live power data
+  const fetchLivePower = async () => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const siteData = await fetchSiteData(accessToken, selectedSiteId);
+      if (siteData) {
+        console.log("Fetching data for site:", selectedSiteId);
+        return parseFloat(siteData.live_power).toFixed(2);
+      }
+    }
+    return "0.00";
+  };
+
+  const fetchConsumptionSummary = async () => {
+    const accessToken = await getAccessToken();
+  
+    if (!monthYear) {
+      console.warn("⚠️ monthYear is null, skipping API call");
+      return "0.00";
+    }
+  
+    if (accessToken) {
+      const startDate = `${monthYear.getFullYear()}-01-01`;
+      const endDate = `${monthYear.getFullYear()}-12-31`;
+  
+      const siteData_ConsumptionSummary = await fetchSiteData_ConsumptionSummary(
+        accessToken,
+        selectedSiteId,
+        startDate, 
+        endDate
+      );
+  
+      const target = siteData_ConsumptionSummary?.find((item: any) => {
+        return item._id.year === monthYear.getFullYear() && item._id.month === (monthYear.getMonth() + 1);
+      });
+  
+      console.log("Filtering data for:", {
+        year: monthYear.getFullYear(),
+        month: monthYear.getMonth() + 1,
+        startDate,
+        endDate
+      });
+  
+      if (target) {
+        console.log("Found data:", target);
+        return (target.actual / 1000).toFixed(2);
+      }
+    }
+  
+    return "0.00";
+  };
+  
+  const fetchCarbon_emission = async () => {
+    const accessToken = await getAccessToken();
+    if (accessToken && monthYear) {
+      const startDate = `${monthYear.getFullYear()}-01-01`;
+      const endDate = `${monthYear.getFullYear()}-12-31`;
+      const siteData_ConsumptionSummary = await fetchSiteData_ConsumptionSummary(
+        accessToken,
+        selectedSiteId,
+        startDate,
+        endDate
+      );
+      
+      if (siteData_ConsumptionSummary) {
+        const target = siteData_ConsumptionSummary.find((item: any) => {
+          return item._id.year === monthYear.getFullYear() && item._id.month === (monthYear.getMonth() + 1);
+        });
+        if (target) {
+          return target.carbon_emission.toFixed(2);
+        }
+      }
+    }
+    return "0.00";
+  };
+
   // Fetch usage statistics
-  const { data: usageStats, isLoading: isStatsLoading } = useQuery<MeterUsageStats>({
-    queryKey: ["/api/energy/summary", siteFilter === "ALL SITES" ? null : siteFilter],
-    select: (data) => ({
-      electricityConsumption: 7.45,
-      carbonEmissions: "N/A kg CO2e",
-      cost: 347.53,
-      benefits: 0
-    })
+  const { data: usageStats, isLoading: isStatsLoading, refetch: refetchUsageStats } = useQuery<MeterUsageStats>({
+    queryKey: ["/api/energy/summary", selectedSiteId, monthYear?.toISOString()],
+    queryFn: async () => {
+      const livePower = await fetchLivePower();
+      const consumptionSummary = await fetchConsumptionSummary();
+      const carbon_emission = await fetchCarbon_emission();
+      
+      return {
+        electricityConsumption: consumptionSummary,
+        carbonEmissions: carbon_emission,
+        cost: parseFloat(consumptionSummary) * 0.07 * 1000,
+        benefits: 0,
+        livepowwer: livePower
+      };
+    }
   });
 
   const formatCurrency = (value: number) => {
@@ -69,65 +152,26 @@ const Meters = () => {
     }).format(value);
   };
 
-  return (
-    <div className="flex flex-col p-4 md:p-6 space-y-6">
-      {/* Top panel with filters */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Button 
-              variant="outline" 
-              className="bg-green-600 text-white font-medium py-2 px-4 rounded-md hover:bg-green-700 border-0 shadow-sm"
-            >
-              {siteFilter}
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </Button>
-          </div>
-          
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <FaCalendarAlt className="text-gray-600" />
-                {date ? format(date, "yyyy-MM-dd") : "Select date"}
-                <span className="text-xs ml-2">Custom</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  setDate(newDate);
-                  setCalendarOpen(false);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+  console.log("Block (siteFilter):", siteFilter, "hourlyData:", hourlyData);
 
-        <Button variant="outline" className="flex items-center gap-2">
-          <FaDownload className="text-gray-600" />
-          Download
-        </Button>
-      </div>
+  return (
+    <div className="flex flex-col p-4 md:p-6 space-y-6 h-screen overflow-y-auto">
+      
 
       {/* Usage statistics cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         <Card className="bg-white shadow-sm">
           <CardHeader className="pb-0">
             <CardTitle className="text-sm text-gray-500 uppercase">ELECTRICITY USAGE</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 grid grid-cols-2 gap-6">
+          <CardContent className="pt-4 flex flex-col space-y-3">
             <div>
-              <h3 className="text-2xl font-bold text-violet-700">{usageStats?.electricityConsumption || '0'} MWh</h3>
+              <h3 className="text-2xl font-bold" style={{ color: '#B38E5D' }}>{usageStats?.electricityConsumption || '0'} MWh</h3>
               <p className="text-sm text-gray-500">CONSUMPTION</p>
             </div>
             <div>
               <div className="flex items-center">
-                <h3 className="text-2xl font-bold text-violet-700">{usageStats?.carbonEmissions || 'N/A'}</h3>
+                <h3 className="text-2xl font-bold" style={{ color: '#B38E5D' }}>{usageStats?.carbonEmissions || 'N/A'} kg CO2e</h3>
                 <Popover>
                   <PopoverTrigger>
                     <FaQuestionCircle className="ml-2 text-gray-400" />
@@ -146,10 +190,10 @@ const Meters = () => {
           <CardHeader className="pb-0">
             <CardTitle className="text-sm text-gray-500 uppercase">MY FINANCES</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 grid grid-cols-2 gap-6">
+          <CardContent className="pt-4 flex flex-col space-y-6">
             <div>
               <div className="flex items-center">
-                <h3 className="text-2xl font-bold text-violet-700">{formatCurrency(usageStats?.cost || 0)}</h3>
+                <h3 className="text-2xl font-bold" style={{ color: '#B38E5D' }}>{formatCurrency(usageStats?.cost || 0)}</h3>
                 <Popover>
                   <PopoverTrigger>
                     <FaQuestionCircle className="ml-2 text-gray-400" />
@@ -163,7 +207,7 @@ const Meters = () => {
             </div>
             <div>
               <div className="flex items-center">
-                <h3 className="text-2xl font-bold text-violet-700">{formatCurrency(usageStats?.benefits || 0)}</h3>
+                <h3 className="text-2xl font-bold" style={{ color: '#B38E5D' }}>{formatCurrency(usageStats?.benefits || 0)}</h3>
                 <Popover>
                   <PopoverTrigger>
                     <FaQuestionCircle className="ml-2 text-gray-400" />
@@ -177,6 +221,22 @@ const Meters = () => {
             </div>
           </CardContent>
         </Card>
+      
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-sm text-gray-500 uppercase">LIVE USAGE STATUS</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 flex flex-col space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold" style={{ color: '#22C55E' }}>Online</h3>
+              <p className="text-sm text-gray-500">Status</p>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold" style={{ color: '#B38E5D' }}>{usageStats?.livepowwer || '0'} kW</h3>
+              <p className="text-sm text-gray-500">Live Power</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Usage chart */}
@@ -186,7 +246,7 @@ const Meters = () => {
             <CardTitle className="text-sm text-gray-500 uppercase">ELECTRICITY USAGE</CardTitle>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-indigo-700 rounded-sm"></div>
+                <div className="w-3 h-3" style={{ backgroundColor: '#002855', borderRadius: '4px' }}></div>
                 <span className="text-xs">Usage</span>
               </div>
               <div className="flex items-center gap-2">
@@ -216,7 +276,6 @@ const Meters = () => {
                   axisLine={{ stroke: '#E0E0E0' }}
                   tickLine={false}
                   tickFormatter={(value) => {
-                    // Format to match the reference image - show hours in 3-hour intervals
                     const hour = parseInt(value.split(':')[0]);
                     if (hour % 3 === 0) {
                       return `${hour}:00`;
@@ -242,7 +301,7 @@ const Meters = () => {
                   labelFormatter={(label) => `Time: ${label}`}
                   cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                 />
-                <Bar dataKey="usage" fill="#4F46E5" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="usage" fill="#002855" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
