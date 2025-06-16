@@ -1,56 +1,69 @@
-# Data Visualization Dashboard
+````markdown
+# 🌱 Carbon Emission Dashboard – EIU Campus
 
-A modern dashboard for visualizing energy consumption and carbon intensity data for Eastern International University.
+This project provides a **real-time dashboard** to track electricity consumption and carbon emissions of campus buildings at Eastern International University (EIU). The system is built with **React + TypeScript** (frontend) and **Express.js** (backend) and integrates external APIs for energy monitoring.
 
-## Features
+---
 
-- **Dashboard Overview**: Display key metrics and statistics
-- **Carbon Journey**: Track and visualize carbon intensity data
-- **Billing Reports**: View and analyze electricity billing data
-- **Meters**: Monitor energy consumption across different blocks
+## 📊 Features
 
-## Tech Stack
+- 📈 Visualize hourly and daily electricity usage
+- 🔍 Track carbon emissions by block (e.g., Block 5, 6, Garage...)
+- 🔮 Forecast carbon output using machine learning (XGBoost)
+- 🌐 WebSocket support for real-time updates
+- 🧠 Built-in data aggregation for charts and summaries
 
-- React + TypeScript
-- Vite
-- TailwindCSS
-- React Query
-- Recharts
-- React Router DOM
+---
 
-## Getting Started
+## 🛠 Tech Stack
 
-1. Clone the repository:
+- **Frontend:** React + TypeScript + Vite + TailwindCSS
+- **Backend:** Node.js + Express
+- **Machine Learning:** Python (XGBoost for forecasting)
+- **Data:** QEnergy API (campus site data)
+- **Deployment:** Local + GitHub Pages + API integration
+
+---
+
+## 🚀 Getting Started
+
+### 1. Install dependencies
+
 ```bash
-git clone https://github.com/yourusername/DataVizDashboard.git
-```
-
-2. Install dependencies:
-```bash
-cd DataVizDashboard
 npm install
-```
+````
 
-3. Start the development server:
+### 2. Run the backend (with data fetching + ML)
+
 ```bash
 npm run dev
 ```
 
-## Project Structure
+> This will auto-fetch daily site data, update charts (`bar_data.json`), and run Python scripts for forecasting (`forecast_carbon.json`).
+
+---
+
+## 📂 Folder Structure
 
 ```
-client/
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── pages/         # Page components
-│   ├── styles/        # Global styles
-│   └── App.tsx        # Main application component
+/client              # Frontend (React UI)
+  └── /public/assets/data   # Stored JSON data
+/scripts             # Python scripts for fetching, forecasting
+/server              # Express server logic
 ```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request 
+## 📬 Contact
+
+**Do Nguyen Anh Tuan**
+🎓 MSc IT Student | LHU
+📍 FabLab @ EIU, Binh Duong
+🌐 [Portfolio](https://donguyenanhtuan.github.io/AnhTuan-Portfolio/)
+
+
+
+---
+
+Let me know if you'd like me to generate the `README.md` file directly for this repo or help update the GitHub repo's description and topics.
+```
